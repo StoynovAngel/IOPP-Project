@@ -28,7 +28,7 @@ public class ContainerResolver {
         }
 
         int optimalValue = bestValue[shipCapacity];
-        log.info("Optimal value = {}", optimalValue);
+        log.info("Maximum value = {}", optimalValue);
 
         List<int[]> solutions = new ArrayList<>();
         dfsCombinations(
@@ -47,8 +47,6 @@ public class ContainerResolver {
 
             log.info(stringBuilder.toString());
         }
-
-        log.info("Maximum value = {}", optimalValue);
     }
 
     private static void dfsCombinations(
