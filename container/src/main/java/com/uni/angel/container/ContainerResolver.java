@@ -12,7 +12,7 @@ public class ContainerResolver {
         throw new UnsupportedOperationException("Cannot instantiate");
     }
 
-    public static int solve(List<Container> containers, int capacity) {
+    public static void solve(List<Container> containers, int capacity) {
         int n = containers.size();
         int[] bestValue = new int[capacity + 1];
 
@@ -48,7 +48,7 @@ public class ContainerResolver {
             log.info(sb.toString());
         }
 
-        return optimalValue;
+        log.info("Maximum value = {}", optimalValue);
     }
 
     private static void dfsCombinations(
