@@ -12,40 +12,40 @@ public class ContainerResolver {
         throw new UnsupportedOperationException("Cannot instantiate");
     }
 
-    public static void solve(List<Container> containers, int capacity) {
-        int n = containers.size();
-        int[] bestValue = new int[capacity + 1];
+    public static void solve(List<Container> containers, int shipCapacity) {
+        int[] bestValue = new int[shipCapacity + 1];
+        int containerSize = containers.size();
 
-        for (int c = 0; c <= capacity; c++) {
+        for (int i = 0; i <= shipCapacity; i++) {
             for (Container container : containers) {
-                int w = container.weight();
-                int v = container.value();
+                int weight = container.weight();
+                int value = container.value();
 
-                if (w <= c) {
-                    bestValue[c] = Math.max(bestValue[c], v + bestValue[c - w]);
+                if (weight <= i) {
+                    bestValue[i] = Math.max(bestValue[i], value + bestValue[i - weight]);
                 }
             }
         }
 
-        int optimalValue = bestValue[capacity];
+        int optimalValue = bestValue[shipCapacity];
         log.info("Optimal value = {}", optimalValue);
 
         List<int[]> solutions = new ArrayList<>();
         dfsCombinations(
-                containers, capacity, optimalValue,
+                containers, shipCapacity, optimalValue,
                 0,
-                new int[n],
+                new int[containerSize],
                 solutions
         );
 
-        for (int[] sol : solutions) {
-            StringBuilder sb = new StringBuilder();
+        for (int[] solution : solutions) {
+            StringBuilder stringBuilder = new StringBuilder();
 
-            for (int i = 0; i < sol.length; i++) {
-                sb.append("x").append(i + 1).append(" = ").append(sol[i]).append(" ");
+            for (int i = 0; i < solution.length; i++) {
+                stringBuilder.append("x").append(i + 1).append(" = ").append(solution[i]).append(" ");
             }
 
-            log.info(sb.toString());
+            log.info(stringBuilder.toString());
         }
 
         log.info("Maximum value = {}", optimalValue);
@@ -57,15 +57,16 @@ public class ContainerResolver {
             int remainingValue,
             int startIndex,
             int[] count,
-            List<int[]> out
+            List<int[]> solutions
     ) {
         if (remainingWeight == 0 && remainingValue == 0) {
-            out.add(count.clone());
+            solutions.add(count.clone());
             return;
         }
 
-        if (remainingWeight < 0 || remainingValue < 0)
+        if (remainingWeight < 0 || remainingValue < 0) {
             return;
+        }
 
         for (int i = startIndex; i < containers.size(); i++) {
             int w = containers.get(i).weight();
@@ -78,7 +79,7 @@ public class ContainerResolver {
                     remainingValue - v,
                     i,
                     count,
-                    out
+                    solutions
             );
             count[i]--;
         }
