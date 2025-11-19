@@ -8,31 +8,58 @@ import java.util.List;
 public class ContainerResolver {
 
     public static int solve(List<Container> containers, int weightCapacity) {
-
         int[] bestValue = new int[weightCapacity + 1];
+        int[] choice = new int[weightCapacity + 1];
 
-        for (int i = 0; i <= weightCapacity; i++) {
+        for (int capacity = 0; capacity <= weightCapacity; capacity++) {
+            for (int i = 0; i < containers.size(); i++) {
+                Container container = containers.get(i);
 
-            for (Container container : containers) {
-                int weightContainer = container.weight();
-                int valueContainer = container.value();
+                int w = container.weight();
+                int v = container.value();
 
-                if (weightContainer > i) {
-                    log.debug("Container (weightContainer={}, valueContainer={}) does NOT fit into capacity {}", weightContainer, valueContainer, weightCapacity);
+                if (w > capacity) {
+                    log.debug(
+                            "Container (w={}, v={}) does NOT fit into capacity {}",
+                            w, v, capacity
+                    );
                     continue;
                 }
 
-                int previous = bestValue[weightCapacity];
-                int candidate = valueContainer + bestValue[weightCapacity - weightContainer];
+                int previous = bestValue[capacity];
+                int candidate = v + bestValue[capacity - w];
 
-                bestValue[i] = Math.max(bestValue[i], valueContainer + bestValue[i - weightContainer]);
+                log.debug(
+                        "Try container {} (w={}, v={}): candidate = {} + bestValue[{}] = {}",
+                        i, w, v, v, (capacity - w), candidate
+                );
 
                 if (candidate > previous) {
-                    String message = "Update: bestValue[{}] changed from {} → {} using container (w={}, v={})";
-                    log.info(message, weightCapacity, previous, candidate, weightContainer, valueContainer);
-                    bestValue[weightCapacity] = candidate;
+                    bestValue[capacity] = candidate;
+                    choice[capacity] = i;
+
+                    log.info(
+                            "UPDATE: bestValue[{}] changed {} → {} using container i={}, (w={}, v={})",
+                            capacity, previous, candidate, i, w, v
+                    );
                 }
             }
+        }
+
+        int cap = weightCapacity;
+        int[] count = new int[containers.size()];
+
+        while (cap > 0) {
+            int chosenIndex = choice[cap];
+            count[chosenIndex]++;
+
+            int w = containers.get(chosenIndex).weight();
+            cap -= w;
+        }
+
+        for (int i = 0; i < containers.size(); i++) {
+            String message = "x{}*={}";
+            log.info(message, i, count[i]);
         }
 
         return bestValue[weightCapacity];
