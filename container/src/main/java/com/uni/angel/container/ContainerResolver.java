@@ -20,6 +20,7 @@ public class ContainerResolver {
         log.info("Maximum value = {}", bestValue);
 
         List<int[]> solutions = new ArrayList<>();
+
         dfsCombinations(
                 containers, shipCapacity, optimalValue,
                 0,
@@ -67,18 +68,20 @@ public class ContainerResolver {
 		}
 
 		for (int i = startIndex; i < containers.size(); i++) {
-			int w = containers.get(i).weight();
-			int v = containers.get(i).value();
+			int weight = containers.get(i).weight();
+			int value = containers.get(i).value();
 
 			count[i]++;
+
 			dfsCombinations(
 					containers,
-					remainingWeight - w,
-					remainingValue - v,
+					remainingWeight - weight,
+					remainingValue - value,
 					i,
 					count,
 					solutions
 			);
+
 			count[i]--;
 		}
 	}
