@@ -13,22 +13,11 @@ public class ContainerResolver {
     }
 
     public static void solve(List<Container> containers, int shipCapacity) {
-        int[] bestValue = new int[shipCapacity + 1];
         int containerSize = containers.size();
+		int[] bestValue = getBestValue(containers, shipCapacity);
 
-        for (int i = 0; i <= shipCapacity; i++) {
-            for (Container container : containers) {
-                int weight = container.weight();
-                int value = container.value();
-
-                if (weight <= i) {
-                    bestValue[i] = Math.max(bestValue[i], value + bestValue[i - weight]);
-                }
-            }
-        }
-
-        int optimalValue = bestValue[shipCapacity];
-        log.info("Maximum value = {}", optimalValue);
+		int optimalValue = bestValue[shipCapacity];
+        log.info("Maximum value = {}", bestValue);
 
         List<int[]> solutions = new ArrayList<>();
         dfsCombinations(
@@ -39,47 +28,68 @@ public class ContainerResolver {
         );
 
         for (int[] solution : solutions) {
-            StringBuilder stringBuilder = new StringBuilder();
-
-            for (int i = 0; i < solution.length; i++) {
-                stringBuilder.append("x").append(i + 1).append(" = ").append(solution[i]).append(" ");
-            }
-
-            log.info(stringBuilder.toString());
-        }
+			logResult(solution);
+		}
     }
 
-    private static void dfsCombinations(
-            List<Container> containers,
-            int remainingWeight,
-            int remainingValue,
-            int startIndex,
-            int[] count,
-            List<int[]> solutions
-    ) {
-        if (remainingWeight == 0 && remainingValue == 0) {
-            solutions.add(count.clone());
-            return;
-        }
+	private static int[] getBestValue(List<Container> containers, int shipCapacity) {
+		int[] bestValue = new int[shipCapacity + 1];
 
-        if (remainingWeight < 0 || remainingValue < 0) {
-            return;
-        }
+		for (int i = 0; i <= shipCapacity; i++) {
+			for (Container container : containers) {
+				int weight = container.weight();
+				int value = container.value();
 
-        for (int i = startIndex; i < containers.size(); i++) {
-            int w = containers.get(i).weight();
-            int v = containers.get(i).value();
+				if (weight <= i) {
+					bestValue[i] = Math.max(bestValue[i], value + bestValue[i - weight]);
+				}
+			}
+		}
 
-            count[i]++;
-            dfsCombinations(
-                    containers,
-                    remainingWeight - w,
-                    remainingValue - v,
-                    i,
-                    count,
-                    solutions
-            );
-            count[i]--;
-        }
-    }
+		return bestValue;
+	}
+
+	private static void dfsCombinations(
+			List<Container> containers,
+			int remainingWeight,
+			int remainingValue,
+			int startIndex,
+			int[] count,
+			List<int[]> solutions
+	) {
+		if (remainingWeight == 0 && remainingValue == 0) {
+			solutions.add(count.clone());
+			return;
+		}
+
+		if (remainingWeight < 0 || remainingValue < 0) {
+			return;
+		}
+
+		for (int i = startIndex; i < containers.size(); i++) {
+			int w = containers.get(i).weight();
+			int v = containers.get(i).value();
+
+			count[i]++;
+			dfsCombinations(
+					containers,
+					remainingWeight - w,
+					remainingValue - v,
+					i,
+					count,
+					solutions
+			);
+			count[i]--;
+		}
+	}
+
+	private static void logResult(int[] solution) {
+		StringBuilder stringBuilder = new StringBuilder();
+
+		for (int i = 0; i < solution.length; i++) {
+			stringBuilder.append("x").append(i + 1).append(" = ").append(solution[i]).append(" ");
+		}
+
+		log.info(stringBuilder.toString());
+	}
 }
