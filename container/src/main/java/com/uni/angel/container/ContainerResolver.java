@@ -3,38 +3,41 @@ package com.uni.angel.container;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class ContainerResolver {
 
-    private ContainerResolver() {
-        throw new UnsupportedOperationException("Cannot instantiate");
-    }
+	private ContainerResolver() {
+		throw new UnsupportedOperationException("Cannot instantiate");
+	}
 
-    public static void solve(List<Container> containers, int shipCapacity) {
-        int containerSize = containers.size();
-		int[] bestValue = getBestValue(containers, shipCapacity);
+	public static void solve(List<Container> containers, int shipCapacity) {
+		int[] maxAchievableValue = computeMaxValue(containers, shipCapacity);
 
-		int optimalValue = bestValue[shipCapacity];
-        log.info("Maximum value = {}", optimalValue);
+		int optimalValue = maxAchievableValue[shipCapacity];
+		log.info("Maximum value = {}", optimalValue);
 
-        List<int[]> solutions = new ArrayList<>();
+		List<Map<Container, Integer>> optimalSolution = new ArrayList<>();
 
-        dfsCombinations(
-                containers, shipCapacity, optimalValue,
-                0,
-                new int[containerSize],
-                solutions
-        );
+		Map<Container, Integer> currentSelection = new HashMap<>();
+		int startIndex = 0;
 
-        for (int[] solution : solutions) {
-			logResult(solution);
+		for (Container container : containers) {
+			currentSelection.put(container, startIndex);
 		}
-    }
 
-	private static int[] getBestValue(List<Container> containers, int shipCapacity) {
-		int[] bestValue = new int[shipCapacity + 1];
+		findAllSolutions(containers, shipCapacity, optimalValue, startIndex, currentSelection, optimalSolution);
+
+		for (Map<Container, Integer> solution : optimalSolution) {
+			logSolution(solution);
+		}
+	}
+
+	private static int[] computeMaxValue(List<Container> containers, int shipCapacity) {
+		int[] bestValueAtWeight = new int[shipCapacity + 1];
 
 		for (int i = 0; i <= shipCapacity; i++) {
 			for (Container container : containers) {
@@ -42,24 +45,24 @@ public class ContainerResolver {
 				int value = container.value();
 
 				if (weight <= i) {
-					bestValue[i] = Math.max(bestValue[i], value + bestValue[i - weight]);
+					bestValueAtWeight[i] = Math.max(bestValueAtWeight[i], value + bestValueAtWeight[i - weight]);
 				}
 			}
 		}
 
-		return bestValue;
+		return bestValueAtWeight;
 	}
 
-	private static void dfsCombinations(
+	private static void findAllSolutions(
 			List<Container> containers,
 			int remainingWeight,
 			int remainingValue,
-			int startIndex,
-			int[] count,
-			List<int[]> solutions
+			int containerIndex,
+			Map<Container, Integer> currentSelection,
+			List<Map<Container, Integer>> allSolutions
 	) {
 		if (remainingWeight == 0 && remainingValue == 0) {
-			solutions.add(count.clone());
+			allSolutions.add(new HashMap<>(currentSelection));
 			return;
 		}
 
@@ -67,30 +70,33 @@ public class ContainerResolver {
 			return;
 		}
 
-		for (int i = startIndex; i < containers.size(); i++) {
-			int weight = containers.get(i).weight();
-			int value = containers.get(i).value();
+		for (int i = containerIndex; i < containers.size(); i++) {
+			Container container = containers.get(i);
+			currentSelection.put(container, currentSelection.get(container) + 1);
 
-			count[i]++;
+			int weight = container.weight();
+			int value = container.value();
 
-			dfsCombinations(
+			findAllSolutions(
 					containers,
 					remainingWeight - weight,
 					remainingValue - value,
 					i,
-					count,
-					solutions
+					currentSelection,
+					allSolutions
 			);
 
-			count[i]--;
+			currentSelection.put(container, currentSelection.get(container) - 1);
 		}
 	}
 
-	private static void logResult(int[] solution) {
+	private static void logSolution(Map<Container, Integer> solution) {
 		StringBuilder stringBuilder = new StringBuilder();
+		int i = 0;
 
-		for (int i = 0; i < solution.length; i++) {
-			stringBuilder.append("x").append(i + 1).append(" = ").append(solution[i]).append(" ");
+		for (Map.Entry<Container, Integer> entry : solution.entrySet()) {
+			stringBuilder.append("x").append(i + 1).append(" = ").append(entry.getValue()).append(" ");
+			i++;
 		}
 
 		log.info(stringBuilder.toString());
