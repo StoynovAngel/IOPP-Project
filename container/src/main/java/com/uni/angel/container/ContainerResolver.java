@@ -2,10 +2,7 @@ package com.uni.angel.container;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public class ContainerResolver {
@@ -22,17 +19,17 @@ public class ContainerResolver {
 
 		List<Map<Container, Integer>> optimalSolution = new ArrayList<>();
 
-		Map<Container, Integer> currentSelection = new HashMap<>();
-		int startIndex = 0;
+		Map<Container, Integer> currentSelection = new LinkedHashMap<>();
 
 		for (Container container : containers) {
-			currentSelection.put(container, startIndex);
+			currentSelection.put(container, 0);
 		}
 
-		findAllSolutions(containers, shipCapacity, optimalValue, startIndex, currentSelection, optimalSolution);
+		findAllSolutions(containers, shipCapacity, optimalValue, 0, currentSelection, optimalSolution);
 
+		log.info("All optimal solutions found: {}", optimalSolution.size());
 		for (Map<Container, Integer> solution : optimalSolution) {
-			logSolution(solution);
+			logSolution(containers, solution);
 		}
 	}
 
@@ -61,12 +58,15 @@ public class ContainerResolver {
 			Map<Container, Integer> currentSelection,
 			List<Map<Container, Integer>> allSolutions
 	) {
-		if (remainingWeight == 0 && remainingValue == 0) {
-			allSolutions.add(new HashMap<>(currentSelection));
+		log.debug("remainingWeight = {}, remainingValue = {}, containerIndex = {}", remainingWeight, remainingValue, containerIndex);
+
+		if (remainingWeight < 0 || remainingValue < 0) {
+			log.debug("Impossible: weight or value is less than 0");
 			return;
 		}
 
-		if (remainingWeight < 0 || remainingValue < 0) {
+		if (remainingWeight == 0 && remainingValue == 0) {
+			allSolutions.add(new HashMap<>(currentSelection));
 			return;
 		}
 
@@ -90,13 +90,12 @@ public class ContainerResolver {
 		}
 	}
 
-	private static void logSolution(Map<Container, Integer> solution) {
+	private static void logSolution(List<Container> containers, Map<Container, Integer> solution) {
 		StringBuilder stringBuilder = new StringBuilder();
-		int i = 0;
 
-		for (Map.Entry<Container, Integer> entry : solution.entrySet()) {
-			stringBuilder.append("x").append(i + 1).append(" = ").append(entry.getValue()).append(" ");
-			i++;
+		for (int i = 0; i < containers.size(); i++) {
+			Container c = containers.get(i);
+			stringBuilder.append("x").append(i + 1).append(" = ").append(solution.get(c)).append(" ");
 		}
 
 		log.info(stringBuilder.toString());
