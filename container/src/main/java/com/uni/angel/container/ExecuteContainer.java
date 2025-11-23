@@ -4,9 +4,10 @@ import java.util.List;
 
 public class ExecuteContainer {
 
-    public void run() {
-        List<Container> containers = ExampleContainers.getContainers();
-        int shipCapacity = 10;
-        ContainerResolver.solve(containers, shipCapacity);
-    }
+	private static final int SHIP_CAPACITY = 10;
+
+	public void run() {
+		List<Container> containers = ExampleContainers.getContainers();
+		ContainerResolver.solve(containers, SHIP_CAPACITY);
+	}
 }

@@ -15,7 +15,7 @@ public class ContainerResolver {
 		int[] maxAchievableValue = computeMaxValue(containers, shipCapacity);
 
 		int optimalValue = maxAchievableValue[shipCapacity];
-		log.info("Maximum value = {}", optimalValue);
+		log.info("Maximum value: {}", optimalValue);
 
 		List<Map<Container, Integer>> optimalSolution = new ArrayList<>();
 
