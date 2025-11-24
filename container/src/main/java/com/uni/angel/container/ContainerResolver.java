@@ -40,19 +40,19 @@ public class ContainerResolver {
 			int qi = containers.get(i - 1).weight();
 			int ci = containers.get(i - 1).value();
 
-			for (int S = 0; S <= SHIP_CAPACITY; S++) {
+			for (int s = 0; s <= SHIP_CAPACITY; s++) {
 				int bestValue = 0;
-				int maxCount = S / qi;
+				int maxCount = s / qi;
 
 				for (int x = 0; x <= maxCount; x++) {
-					int newValue = ci * x + optimalEarningPerCapacity[i + 1][S - qi * x];
+					int newValue = ci * x + optimalEarningPerCapacity[i + 1][s - qi * x];
 
 					if (newValue > bestValue) {
 						bestValue = newValue;
 					}
 				}
 
-				optimalEarningPerCapacity[i][S] = bestValue;
+				optimalEarningPerCapacity[i][s] = bestValue;
 			}
 
 			log.info("W{}(S): {}", i, Arrays.toString(optimalEarningPerCapacity[i]));
@@ -66,12 +66,12 @@ public class ContainerResolver {
 		Map<Container, Integer> selection = new LinkedHashMap<>();
 
 		containers.forEach(container -> selection.put(container, 0));
-		dfs(containers, 0, ContainerResolver.SHIP_CAPACITY, optimalValue, selection, results);
+		dfs(0, SHIP_CAPACITY, optimalValue, selection, results);
 
 		return results;
 	}
 
-	private static void dfs(List<Container> containers, int index, int remainingW, int remainingV, Map<Container, Integer> selection, List<Map<Container, Integer>> results) {
+	private static void dfs(int index, int remainingW, int remainingV, Map<Container, Integer> selection, List<Map<Container, Integer>> results) {
 		if (remainingW < 0 || remainingV < 0) {
 			return;
 		}
@@ -89,7 +89,11 @@ public class ContainerResolver {
 
 		for (int count = 0; count <= remainingW / container.weight(); count++) {
 			selection.put(container, count);
-			dfs(containers, index + 1, remainingW - count * container.weight(), remainingV - count * container.value(), selection, results);
+
+			int updatedValue = remainingV - count * container.value();
+			int updatedWeight = remainingW - count * container.weight();
+
+			dfs(index + 1, updatedWeight, updatedValue, selection, results);
 		}
 
 		selection.put(container, 0);
