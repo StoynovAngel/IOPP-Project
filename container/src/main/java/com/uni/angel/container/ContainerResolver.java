@@ -2,102 +2,113 @@ package com.uni.angel.container;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 public class ContainerResolver {
 
+	private static final int SHIP_CAPACITY = 10;
+	private static final List<Container> containers = ExampleContainers.getContainers();
+
 	private ContainerResolver() {
-		throw new UnsupportedOperationException("Cannot instantiate");
+		throw new UnsupportedOperationException();
 	}
 
-	public static void solve(List<Container> containers, int shipCapacity) {
-		int[] maxAchievableValue = computeMaxValue(containers, shipCapacity);
+	public static void solve() {
+		int containerSize = containers.size();
 
-		int optimalValue = maxAchievableValue[shipCapacity];
-		log.info("Maximum value: {}", optimalValue);
+		int[][] optimalEarningPerCapacity = new int[containerSize + 2][SHIP_CAPACITY + 1];
+		int[][] optimalContainerCount = new int[containerSize + 2][SHIP_CAPACITY + 1];
 
-		List<Map<Container, Integer>> optimalSolution = new ArrayList<>();
+		computeBellmanTables(optimalEarningPerCapacity, optimalContainerCount);
 
-		Map<Container, Integer> currentSelection = new LinkedHashMap<>();
+		log.info("All optimal solutions:");
+		int optimalValue = optimalEarningPerCapacity[1][SHIP_CAPACITY];
+		List<int[]> solutions = findAllOptimalSolutions(optimalValue);
 
-		for (Container container : containers) {
-			currentSelection.put(container, 0);
+		for (int[] solution : solutions) {
+			printSolution(solution);
 		}
 
-		findAllSolutions(containers, shipCapacity, optimalValue, 0, currentSelection, optimalSolution);
-
-		log.info("All optimal solutions found: {}", optimalSolution.size());
-		for (Map<Container, Integer> solution : optimalSolution) {
-			logSolution(containers, solution);
-		}
+		log.info("Number of solutions = {}", solutions.size());
 	}
 
-	private static int[] computeMaxValue(List<Container> containers, int shipCapacity) {
-		int[] bestValueAtWeight = new int[shipCapacity + 1];
+	private static void computeBellmanTables(int[][] optimalEarningPerCapacity, int[][] optimalContainerCount) {
+		int containerSize = containers.size();
 
-		for (int i = 0; i <= shipCapacity; i++) {
-			for (Container container : containers) {
-				int weight = container.weight();
-				int value = container.value();
+		for (int i = 0; i <= SHIP_CAPACITY; i++) {
+			optimalEarningPerCapacity[containerSize + 1][i] = 0;
+		}
 
-				if (weight <= i) {
-					bestValueAtWeight[i] = Math.max(bestValueAtWeight[i], value + bestValueAtWeight[i - weight]);
+		for (int i = containerSize; i >= 1; i--) {
+			int qi = containers.get(i - 1).weight();
+			int ci = containers.get(i - 1).value();
+
+			for (int S = 0; S <= SHIP_CAPACITY; S++) {
+				int bestValue = 0;
+				int bestX = 0;
+
+				int maxCount = S / qi;
+
+				for (int x = 0; x <= maxCount; x++) {
+					int newValue = ci * x + optimalEarningPerCapacity[i + 1][S - qi * x];
+
+					if (newValue > bestValue) {
+						bestValue = newValue;
+						bestX = x;
+					}
 				}
+
+				optimalEarningPerCapacity[i][S] = bestValue;
+				optimalContainerCount[i][S] = bestX;
 			}
-		}
 
-		return bestValueAtWeight;
-	}
-
-	private static void findAllSolutions(
-			List<Container> containers,
-			int remainingWeight,
-			int remainingValue,
-			int containerIndex,
-			Map<Container, Integer> currentSelection,
-			List<Map<Container, Integer>> allSolutions
-	) {
-		log.debug("remainingWeight = {}, remainingValue = {}, containerIndex = {}", remainingWeight, remainingValue, containerIndex);
-
-		if (remainingWeight < 0 || remainingValue < 0) {
-			log.debug("Impossible: weight or value is less than 0");
-			return;
-		}
-
-		if (remainingWeight == 0 && remainingValue == 0) {
-			allSolutions.add(new HashMap<>(currentSelection));
-			return;
-		}
-
-		for (int i = containerIndex; i < containers.size(); i++) {
-			Container container = containers.get(i);
-			currentSelection.put(container, currentSelection.get(container) + 1);
-
-			int weight = container.weight();
-			int value = container.value();
-
-			findAllSolutions(
-					containers,
-					remainingWeight - weight,
-					remainingValue - value,
-					i,
-					currentSelection,
-					allSolutions
-			);
-
-			currentSelection.put(container, currentSelection.get(container) - 1);
+			log.info("W{}(S): {}", i, Arrays.toString(optimalEarningPerCapacity[i]));
 		}
 	}
 
-	private static void logSolution(List<Container> containers, Map<Container, Integer> solution) {
-		StringBuilder stringBuilder = new StringBuilder();
+	private static List<int[]> findAllOptimalSolutions(int optimalValue) {
+		List<int[]> results = new ArrayList<>();
+		int[] selection = new int[containers.size()];
 
-		for (int i = 0; i < containers.size(); i++) {
-			Container c = containers.get(i);
-			stringBuilder.append("x").append(i + 1).append(" = ").append(solution.get(c)).append(" ");
+		dfs(containers, 0, ContainerResolver.SHIP_CAPACITY, optimalValue, selection, results);
+
+		return results;
+	}
+
+	private static void dfs(List<Container> containers, int index, int remainingW, int remainingV, int[] selection, List<int[]> results) {
+		if (remainingW < 0 || remainingV < 0) {
+			return;
 		}
 
-		log.info(stringBuilder.toString());
+		if (remainingW == 0 && remainingV == 0) {
+			results.add(selection.clone());
+			return;
+		}
+
+		if (index >= containers.size()) {
+			return;
+		}
+
+		Container container = containers.get(index);
+
+		for (int count = 0; count <= remainingW / container.weight(); count++) {
+			selection[index] = count;
+			dfs(containers, index + 1, remainingW - count * container.weight(), remainingV - count * container.value(), selection, results);
+		}
+
+		selection[index] = 0;
+	}
+
+	private static void printSolution(int[] sol) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < sol.length; i++) {
+			sb.append("x").append(i + 1).append("* = ").append(sol[i]).append(" ");
+		}
+
+		log.info(sb.toString());
 	}
 }
