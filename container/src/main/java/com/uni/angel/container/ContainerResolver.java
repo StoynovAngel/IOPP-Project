@@ -76,12 +76,12 @@ public class ContainerResolver {
 			return;
 		}
 
-		if (index >= containers.size()) {
+		if (remainingWeight == 0 && remainingValue == 0) {
+			results.add(new LinkedHashMap<>(selection));
 			return;
 		}
 
-		if (remainingWeight == 0 && remainingValue == 0) {
-			results.add(new LinkedHashMap<>(selection));
+		if (index >= containers.size()) {
 			return;
 		}
 
