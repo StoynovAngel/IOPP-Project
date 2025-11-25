@@ -79,7 +79,7 @@ public class ContainerResolver {
 
 		if (remainingWeight == 0 && remainingValue == 0) {
 			results.add(new LinkedHashMap<>(selection));
-			log.debug("Add new solution: {}", selection);
+			log.debug("Add new solution: \n{}", selection);
 			return;
 		}
 
