@@ -71,13 +71,8 @@ public class ContainerResolver {
 		return results;
 	}
 
-	private static void dfs(int index, int remainingW, int remainingV, Map<Container, Integer> selection, List<Map<Container, Integer>> results) {
-		if (remainingW < 0 || remainingV < 0) {
-			return;
-		}
-
-		if (remainingW == 0 && remainingV == 0) {
-			results.add(new LinkedHashMap<>(selection));
+	private static void dfs(int index, int remainingWeight, int remainingValue, Map<Container, Integer> selection, List<Map<Container, Integer>> results) {
+		if (remainingWeight < 0 || remainingValue < 0) {
 			return;
 		}
 
@@ -85,13 +80,18 @@ public class ContainerResolver {
 			return;
 		}
 
+		if (remainingWeight == 0 && remainingValue == 0) {
+			results.add(new LinkedHashMap<>(selection));
+			return;
+		}
+
 		Container container = containers.get(index);
 
-		for (int count = 0; count <= remainingW / container.weight(); count++) {
+		for (int count = 0; count <= remainingWeight / container.weight(); count++) {
 			selection.put(container, count);
 
-			int updatedValue = remainingV - count * container.value();
-			int updatedWeight = remainingW - count * container.weight();
+			int updatedValue = remainingValue - count * container.value();
+			int updatedWeight = remainingWeight - count * container.weight();
 
 			dfs(index + 1, updatedWeight, updatedValue, selection, results);
 		}
