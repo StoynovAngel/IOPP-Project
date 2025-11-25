@@ -73,11 +73,13 @@ public class ContainerResolver {
 
 	private static void dfs(int index, int remainingWeight, int remainingValue, Map<Container, Integer> selection, List<Map<Container, Integer>> results) {
 		if (remainingWeight < 0 || remainingValue < 0) {
+			log.debug("It cannot be less than 0");
 			return;
 		}
 
 		if (remainingWeight == 0 && remainingValue == 0) {
 			results.add(new LinkedHashMap<>(selection));
+			log.debug("Add new solution: {}", selection);
 			return;
 		}
 
@@ -86,12 +88,15 @@ public class ContainerResolver {
 		}
 
 		Container container = containers.get(index);
+		int maxCount = remainingWeight / container.weight();
 
-		for (int count = 0; count <= remainingWeight / container.weight(); count++) {
+		for (int count = 0; count <= maxCount; count++) {
 			selection.put(container, count);
 
 			int updatedValue = remainingValue - count * container.value();
 			int updatedWeight = remainingWeight - count * container.weight();
+
+			log.debug("UpdatedValue: {}, UpdatedWeight: {}", updatedValue, updatedWeight);
 
 			dfs(index + 1, updatedWeight, updatedValue, selection, results);
 		}
